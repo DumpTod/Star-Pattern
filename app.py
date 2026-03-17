@@ -16,17 +16,10 @@ app = Flask(__name__)
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
-FYERS_APP_ID = os.environ.get('FYERS_APP_ID', 'YOUR_APP_ID')
-FYERS_ACCESS_TOKEN = os.environ.get('FYERS_ACCESS_TOKEN', 'YOUR_ACCESS_TOKEN')
-
-SYMBOL_MAP = {
-    'NIFTY50': 'NSE:NIFTY50-INDEX',
-    'BANKNIFTY': 'NSE:NIFTYBANK-INDEX',
-    'SENSEX': 'BSE:SENSEX-INDEX'
-}
-
-# Store trades in memory (use database in production)
-TRADES_FILE = 'trades_history.json'
+FYERS_APP_ID = os.environ.get('FYERS_APP_ID', '')
+FYERS_SECRET_KEY = os.environ.get('FYERS_SECRET_KEY', '')
+FYERS_ACCESS_TOKEN = os.environ.get('FYERS_ACCESS_TOKEN', '')
+FYERS_REDIRECT_URL = os.environ.get('FYERS_REDIRECT_URL', '')
 
 # =============================================================================
 # FYERS CLIENT
