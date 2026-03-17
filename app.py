@@ -482,7 +482,46 @@ def rescan_trade(trade):
         print(f"Error rescanning trade: {e}")
     
     return trade
+from fyers_apiv3 import fyersModel
+import webbrowser
 
+@app.route('/login')
+def login():
+    """Step 1: Generate Fyers Login URL and redirect user"""
+    session = fyersModel.SessionModel(
+        client_id=FYERS_APP_ID,
+        secret_key=FYERS_SECRET_KEY,
+        redirect_uri=FYERS_REDIRECT_URL,
+        response_type="code",
+        grant_type="authorization_code"
+    )
+    auth_url = session.generate_auth_code()
+    return f"<script>window.location.href='{auth_url}';</script>"
+
+@app.route('/auth')
+def auth_callback():
+    """Step 2: Capture Auth Code from URL and generate Access Token"""
+    auth_code = request.args.get('auth_code')
+    if not auth_code:
+        return "Error: No auth code received from Fyers."
+
+    session = fyersModel.SessionModel(
+        client_id=FYERS_APP_ID,
+        secret_key=FYERS_SECRET_KEY,
+        redirect_uri=FYERS_REDIRECT_URL,
+        response_type="code",
+        grant_type="authorization_code"
+    )
+    session.set_token(auth_code)
+    response = session.generate_token()
+    
+    if "access_token" in response:
+        # Update the global variable for this session
+        global FYERS_ACCESS_TOKEN
+        FYERS_ACCESS_TOKEN = response["access_token"]
+        return "Success! Access Token generated. You can now close this and scan."
+    else:
+        return f"Failed to generate token: {response}"
 # =============================================================================
 # ROUTES
 # =============================================================================
