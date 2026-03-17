@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade History - Pattern Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #FAF9F6;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            background-color: #4682B4;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            color: white;
+            font-size: 24px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* Header */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-section h2 {
+            color: #4682B4;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: #4682B4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #36648B;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4682B4;
+        }
+
+        .stat-card.profit .value {
+            color: #27ae60;
+        }
+
+        .stat-card.loss .value {
+            color: #e74c3c;
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background-color: #4682B4;
+            color: white;
+            padding: 20px;
+        }
+
+        .table-header h3 {
+            font-size: 18px;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #4682B4;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-buy {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-sell {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-active {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-closed {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .badge-target {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-stoploss {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-profit {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-loss {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-missed {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        /* Price */
+        .price {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .price.positive {
+            color: #27ae60;
+        }
+
+        .price.negative {
+            color: #e74c3c;
+        }
+
+        /* Actions */
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .action-btn.rescan {
+            background-color: #4682B4;
+            color: white;
+        }
+
+        .action-btn.rescan:hover {
+            background-color: #36648B;
+        }
+
+        .action-btn.delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background-color: #c0392b;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            color: #4682B4;
+            margin-bottom: 10px;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4682B4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background-color: #27ae60;
+        }
+
+        .toast.error {
+            background-color: #e74c3c;
+        }
+
+        /* Last Rescan */
+        .last-rescan {
+            text-align: right;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <h1>📊 Pattern Scanner</h1>
+        <div class="nav-links">
+            <a href="/">Scanner</a>
+            <a href="/history" class="active">History</a>
+        </div>
+    </nav>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header-section">
+            <h2>📜 Trade History</h2>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="rescanAll()" id="rescanBtn">
+                    🔄 Rescan All Active
+                </button>
+                <button class="btn btn-danger" onclick="clearHistory()">
+                    🗑️ Clear History
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Total Trades</h4>
+                <div class="value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Active</h4>
+                <div class="value" id="statActive">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Targets Hit</h4>
+                <div class="value" id="statTargets">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Stoplosses Hit</h4>
+                <div class="value" id="statStoplosses">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Win Rate</h4>
+                <div class="value" id="statWinRate">0%</div>
+            </div>
+            <div class="stat-card profit">
+                <h4>Total P&L</h4>
+                <div class="value" id="statPnL">0</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>Symbol:</label>
+                <select id="filterSymbol" onchange="filterTrades()">
+                    <option value="all">All Symbols</option>
+                    <option value="NIFTY50">NIFTY50</option>
+                    <option value="BANKNIFTY">BANKNIFTY</option>
+                    <option value="SENSEX">SENSEX</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Pattern:</label>
+                <select id="filterPattern" onchange="filterTrades()">
+                    <option value="all">All Patterns</option>
+                    <option value="MORNING_STAR">Morning Star</option>
+                    <option value="EVENING_STAR">Evening Star</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status:</label>
+                <select id="filterStatus" onchange="filterTrades()">
+                    <option value="all">All Status</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="CLOSED">Closed</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Result:</label>
+                <select id="filterResult" onchange="filterTrades()">
+                    <option value="all">All Results</option>
+                    <option value="TARGET">Target</option>
+                    <option value="STOPLOSS">Stoploss</option>
+                    <option value="IN_PROFIT">In Profit</option>
+                    <option value="IN_LOSS">In Loss</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Last Rescan -->
+        <div class="last-rescan" id="lastRescan">
+            Last rescan: Never
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3>📋 All Trades</h3>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Pattern</th>
+                            <th>Signal</th>
+                            <th>Entry</th>
+                            <th>Current</th>
+                            <th>Target</th>
+                            <th>Stoploss</th>
+                            <th>Exit</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                            <th>P&L Pts</th>
+                            <th>P&L %</th>
+                            <th>Regime</th>
+                            <th>Pattern Time</th>
+                            <th>Exit Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradesBody">
+                        <tr>
+                            <td colspan="16">
+                                <div class="empty-state">
+                                    <h3>No trades in history</h3>
+                                    <p>Scan for patterns to add trades</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allTrades = [];
+        let filteredTrades = [];
+
+        // Show toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Loading
+        function setLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        // Load trades
+        async function loadTrades() {
+            try {
+                const response = await fetch('/api/trades');
+                const data = await response.json();
+                if (data.success) {
+                    allTrades = data.trades;
+                    filterTrades();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error loading trades', 'error');
+            }
+        }
+
+        // Filter trades
+        function filterTrades() {
+            const symbol = document.getElementById('filterSymbol').value;
+            const pattern = document.getElementById('filterPattern').value;
+            const status = document.getElementById('filterStatus').value;
+            const result = document.getElementById('filterResult').value;
+
+            filteredTrades = allTrades.filter(t => {
+                if (symbol !== 'all' && t.symbol !== symbol) return false;
+                if (pattern !== 'all' && t.pattern !== pattern) return false;
+                if (status !== 'all' && t.status !== status) return false;
+                if (result !== 'all' && t.result !== result) return false;
+                return true;
+            });
+
+            renderTrades();
+        }
+
+        // Render trades
+        function renderTrades() {
+            const tbody = document.getElementById('tradesBody');
+
+            if (filteredTrades.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="16">
+                            <div class="empty-state">
+                                <h3>No trades found</h3>
+                                <p>Adjust filters or scan for new patterns</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by pattern time descending
+            filteredTrades.sort((a, b) => new Date(b.pattern_time) - new Date(a.pattern_time));
+
+            tbody.innerHTML = filteredTrades.map(t => {
+                const pnlClass = t.pnl_points > 0 ? 'positive' : t.pnl_points < 0 ? 'negative' : '';
+                const resultBadge = getResultBadge(t.result);
+                const statusBadge = t.status === 'ACTIVE' ? 'badge-active' : 'badge-closed';
+
+                return `
+                    <tr>
+                        <td><strong>${t.symbol}</strong></td>
+                        <td>${t.pattern === 'MORNING_STAR' ? '🌟' : '⭐'} ${t.pattern.replace('_', ' ')}</td>
+                        <td><span class="badge badge-${t.signal.toLowerCase()}">${t.signal}</span></td>
+                        <td class="price">${t.entry_price}</td>
+                        <td class="price">${t.current_price || '-'}</td>
+                        <td class="price positive">${t.target_price}</td>
+                        <td class="price negative">${t.stoploss_price}</td>
+                        <td class="price">${t.exit_price || '-'}</td>
+                        <td><span class="badge ${statusBadge}">${t.status}</span></td>
+                        <td><span class="badge ${resultBadge}">${t.result || '-'}</span></td>
+                        <td class="price ${pnlClass}">${t.pnl_points ? t.pnl_points.toFixed(2) : '-'}</td>
+                        <td class="price ${pnlClass}">${t.pnl_percent ? t.pnl_percent.toFixed(4) + '%' : '-'}</td>
+                        <td>${t.regime}</td>
+                        <td>${t.pattern_time}</td>
+                        <td>${t.exit_time || '-'}</td>
+                        <td>
+                            <button class="action-btn rescan" onclick="rescanTrade('${t.id}')">🔄</button>
+                            <button class="action-btn delete" onclick="deleteTrade('${t.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Get result badge class
+        function getResultBadge(result) {
+            switch(result) {
+                case 'TARGET': return 'badge-target';
+                case 'STOPLOSS': return 'badge-stoploss';
+                case 'IN_PROFIT': return 'badge-profit';
+                case 'IN_LOSS': return 'badge-loss';
+                case 'MISSED': return 'badge-missed';
+                default: return '';
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            const total = allTrades.length;
+            const active = allTrades.filter(t => t.status === 'ACTIVE').length;
+            const closed = allTrades.filter(t => t.status === 'CLOSED');
+            const targets = closed.filter(t => t.result === 'TARGET').length;
+            const stoplosses = closed.filter(t => t.result === 'STOPLOSS').length;
+            const winRate = closed.length > 0 ? (targets / closed.length * 100).toFixed(1) : 0;
+            const totalPnL = closed.reduce((sum, t) => sum + (t.pnl_points || 0), 0);
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statTargets').textContent = targets;
+            document.getElementById('statStoplosses').textContent = stoplosses;
+            document.getElementById('statWinRate').textContent = winRate + '%';
+            
+            const pnlEl = document.getElementById('statPnL');
+            pnlEl.textContent = totalPnL.toFixed(2);
+            pnlEl.parentElement.className = `stat-card ${totalPnL >= 0 ? 'profit' : 'loss'}`;
+        }
+
+        // Rescan all active trades
+        async function rescanAll() {
+            const btn = document.getElementById('rescanBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Rescanning...';
+            setLoading(true);
+
+            try {
+                const response = await fetch('/api/rescan', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    allTrades = data.trades;
+                    filterTrades();
+                    updateStats();
+                    document.getElementById('lastRescan').textContent = `Last rescan: ${data.rescan_time}`;
+                    showToast('Rescan completed!');
+                } else {
+                    showToast(data.error || 'Rescan failed', 'error');
+                }
+            } catch (error) {
+                showToast('Error rescanning', 'error');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Rescan All Active';
+                setLoading(false);
+            }
+        }
+
+        // Rescan single trade
+        async function rescanTrade(tradeId) {
+            setLoading(true);
+            try {
+                const response = await fetch(`/api/rescan/${tradeId}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    const idx = allTrades.findIndex(t => t.id === tradeId);
+                    if (idx !== -1) {
+                        allTrades[idx] = data.trade;
+                        filterTrades();
+                        updateStats();
+                    }
+                    showToast('Trade rescanned!');
+                } else {
+                    showToast(data.error || 'Rescan failed', 'error');
+                }
+            } catch (error) {
+                showToast('Error rescanning', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Delete trade
+        async function deleteTrade(tradeId) {
+            if (!confirm('Delete this trade?')) return;
+
+            try {
+                const response = await fetch(`/api/delete/${tradeId}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (data.success) {
+                    allTrades = allTrades.filter(t => t.id !== tradeId);
+                    filterTrades();
+                    updateStats();
+                    showToast('Trade deleted!');
+                }
+            } catch (error) {
+                showToast('Error deleting', 'error');
+            }
+        }
+
+        // Clear all history
+        async function clearHistory() {
+            if (!confirm('Clear all trade history? This cannot be undone.')) return;
+
+            try {
+                const response = await fetch('/api/clear', { method: 'DELETE' });
+                const data = await response.json();
+
+                if (data.success) {
+                    allTrades = [];
+                    filterTrades();
+                    updateStats();
+                    showToast('History cleared!');
+                }
+            } catch (error) {
+                showToast('Error clearing', 'error');
+            }
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadTrades);
+    </script>
+</body>
+</html>
